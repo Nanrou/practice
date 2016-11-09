@@ -35,7 +35,7 @@ class CalulateWindow(wx.Frame):
                 self.onClose(event)
            
     def set_Icon(self):
-        icon = wx.Icon('cat.ico',wx.BITMAP_TYPE_ICO)
+        icon = wx.Icon('icos/cat.ico',wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon)
         
     def initUI(self):
