@@ -6,6 +6,9 @@ BUG:1,无法按ESC键退出；2，输错后重新输入有0跟在后面
 ----------V1.1版本------------
 修复：输错后重新输入有0跟在后面
 方法：先是想直接重新赋值为空，但是这样做会直接循环报错，所以先判断不为空才进行操作
+----------V1.2版本------------
+增加功能：可以在户数直接进行数据计算
+方法：用eval方法，然后用try包住，因为在输入+-*时候会报错，在后面添加数字来避免错误
 '''
 
 import wx
@@ -48,7 +51,7 @@ class CalulateWindow(wx.Frame):
         self.text_each_housepeople = wx.TextCtrl(self.panel,-1,value='',pos=(70,30),size =(35,25))
         self.text_each_day = wx.TextCtrl(self.panel,-1,value='',pos=(140,30),size =(50,25))
         self.text_hour_coefficient = wx.TextCtrl(self.panel,-1,value='',pos=(230,30),size =(40,25))
-        self.output = wx.TextCtrl(self.panel,-1,value='',pos=(10,120),size=(200,50),style=wx.TE_MULTILINE)
+        self.output = wx.TextCtrl(self.panel,-1,value='',pos=(10,120),size=(200,80),style=wx.TE_MULTILINE)
 
     def initNum(self):
         self.max_hour_flow = 0
@@ -59,7 +62,7 @@ class CalulateWindow(wx.Frame):
         self.text_each_day.SetValue('200')
         self.text_hour_coefficient.SetValue('2.5')
         
-        self.output.SetValue(u'最大小时流量：%s \n水池容量：%s'%(self.max_hour_flow,self.waterbox_volume))
+        self.output.SetValue(u'最高日用水量: %s\n最大小时流量：%s \n水池容量：%s'%(0,self.max_hour_flow,self.waterbox_volume))
 
     def createHandler(self):
         
@@ -75,20 +78,31 @@ class CalulateWindow(wx.Frame):
         housepeople = self.text_each_housepeople.GetValue()
         each_day = self.text_each_day.GetValue()
         hour_coefficient = self.text_hour_coefficient.GetValue()
-        #用try包住
-        if  households:#不为空才进行判断
-            try:
-                highest_day_flow = int(households)*float(housepeople)*float(each_day)/1000
-                self.max_hour_flow = '%.2f' % (highest_day_flow/24*float(hour_coefficient))
-                waterbox_min = '%.2f' %(highest_day_flow*0.15)
-                waterbox_max = '%.2f' %(highest_day_flow*0.20)
-                self.output.SetValue(u'最大小时流量：%s \n水池容量：%s~%s'%(self.max_hour_flow,waterbox_min,waterbox_max))
-            except :
-                dlg = wx.MessageDialog(self,u'格式错误，请输入正确的等式。',u'请注意',wx.OK|wx.ICON_INFORMATION)
-                dlg.ShowModal()
-                dlg.Destroy()
-                self.initNum()
-                self.text_households.SetValue('')#去掉初始化的0
+        t=0
+        #用try包住，提前判断输入条件
+        try:
+            t = eval(households)
+        except SyntaxError:
+            if households.endswith('*'):
+                households = households + '1'
+                t = eval(households)
+            if households.endswith('+') or households.endswith('-'):
+                households = households + '0'
+                t = eval(households)
+        except NameError:
+            dlg = wx.MessageDialog(self,u'格式错误，请输入正确的等式。',u'请注意',wx.OK|wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+            self.initNum()
+            self.text_households.SetValue('')#去掉初始化的0
+               
+        if  isinstance(t,int) and t >0:#规定了int类型才进行判断
+            highest_day_flow = int(t)*float(housepeople)*float(each_day)/1000
+            self.max_hour_flow = '%.2f' % (highest_day_flow/24*float(hour_coefficient))
+            waterbox_min = '%.2f' %(highest_day_flow*0.15)
+            waterbox_max = '%.2f' %(highest_day_flow*0.20)
+            self.output.SetValue(u'最高日用水量: %s\n最大小时流量: %s \n水池容量: %s~%s'%(highest_day_flow,self.max_hour_flow,waterbox_min,waterbox_max))
+
                 
 if __name__ == '__main__':
     app = wx.App()
