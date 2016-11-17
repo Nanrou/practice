@@ -3,6 +3,37 @@
 import BaseHTTPServer
 import sys,os
 
+
+
+class ServerException(Exception):
+    pass       
+class case_no_file(object):
+    def test(self,handler):
+        return not os.path.exists(handler.full_path)
+    def act(self,handler):
+        raise ServerException(" '{0}' not found".format(handler.path))
+
+class case_existing_file(object):
+    def test(self,handler):
+        return os.path.isfile(handler.full_path)
+    def act(self,handler):
+        handler.handle_file(handler.full_path)
+
+class case_always_fail(object):
+    def test(self,handler):
+        return True
+    def act(self,handler):
+        raise ServerException('Unkown object "{0}"'.format(handler.path))
+
+class case_directory_index_file(object):
+    def index_path(self,handler):
+        return os.path.join(handler.full_path,'index.html')
+    def test(self,handler):
+        return os.path.isdir(handler.full_path) and\
+            os.path.isfile(self.index_path(handler))
+    def act(self,handler):
+        handler.handle_file(self.index_path(handler))
+        
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     Page = '''\
@@ -32,26 +63,26 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         page = self.Page.format(**values)#替换原字符串中{}的部分
         return page
     
-    def send_content(self, page):
-        self.send_response(200)
+    def send_content(self, content,status=200):
+        self.send_response(status)
         self.send_header('Content-type', 'text/html')
-        self.send_header('Content-Length', str(len(page)))
+        self.send_header('Content-Length', str(len(content)))
         self.end_headers()
-        self.wfile.write(page)
+        self.wfile.write(content)
     
+    Cases = [case_no_file(),case_existing_file(),case_directory_index_file(),case_always_fail()]
+    #要注意元素的次序
     def do_GET(self):
         try:
             full_path = os.getcwd() + self.path
-            
-            if not os.path.exists(full_path):
-                raise ServerException("'{0}' not found".format(self.path))
-            
-            elif os.path.isabs(full_path):
-                self.handle_file(full_path)
-            
-            else:
-                raise ServerException('Unkown object "{0}"'.format(self.path))
-        
+            self.full_path = full_path
+            for case in self.Cases:
+                handler = case
+                if handler.test(self):
+                    handler.act(self)
+                    break
+                
+                
         except Exception as msg:
             self.handle_error(msg)
     
@@ -74,15 +105,11 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''
     def handle_error(self,msg):
         content = self.Error_Page.format(path = self.path , msg = msg)
-        self.send_content(content)
+        self.send_content(content,404)
     
     
-class ServerException(Exception):
-    pass        
-        
-        
 if __name__ == '__main__':
     serverAddress = ('',8000)
     server = BaseHTTPServer.HTTPServer(serverAddress,RequestHandler)
-    server.serve_forever()
     print 'Listening...'
+    server.serve_forever()
