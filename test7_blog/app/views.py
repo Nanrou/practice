@@ -1,3 +1,8 @@
+#coding:utf8
+'''
+定义了内部逻辑和渲染函数
+'''
+
 import datetime
 from string import strip
 

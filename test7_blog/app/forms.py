@@ -1,3 +1,7 @@
+#coding:utf8
+'''
+这个模块是定义各种类型
+'''
 from flask_wtf import FlaskForm
 from wtforms import TextField,BooleanField,PasswordField,TextAreaField,SubmitField
 from wtforms.validators import Required,Email,Length

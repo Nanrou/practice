@@ -1,3 +1,8 @@
+#coding:utf8
+'''
+定义配置文件
+'''
+
 CSRF_ENABLED = True
 SECRET_KEY = 'Nanrou'
 
