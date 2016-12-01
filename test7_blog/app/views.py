@@ -8,6 +8,7 @@ from models import User,Post,ROLE_USER,ROLE_ADMIN
 from app import app,db,lm
 from forms import LoginForm,SignUpForm,AboutMeForm,PublishBlogForm
 
+from utils import PER_PAGE
 
 @lm.user_loader
 def load_user(user_id):
@@ -104,17 +105,20 @@ def sign_up():
         
     return render_template('sign_up.html',form=form)
 
-@app.route('/user/<int:user_id>',methods=['POST','GET'])
+@app.route('/user/<int:user_id>',defaults={'page':1},methods=['POST','GET'])
+@app.route('/user/<int:user_id>/page/<int:page>',methods=['GET','POST'])
 @login_required
-def users(user_id):
+def users(user_id,page):
     form = AboutMeForm()
-    user = User.query.filter(User.id == user_id).first()
-    if not user:
-        flash('The user is not exist.')
-        redirect('/index')
-    blogs = user.posts.all()
+    if user_id != current_user.id:
+        flash('Sorry,you can only vies your profile!','error')
+        return redirect('/index')
     
-    return render_template('user.html',form=form,user=user,blogs=blogs)
+    #pagination = user.posts.paginate(page,PER_PAGE,Flase).items
+    pagination = Post.query.filter_by(user_id = current_user.id).order_by(db.desc(Post.timestamp)).paginate(page,PER_PAGE,False)
+    
+    
+    return render_template('user.html',form=form,pagination=pagination)
 
 @app.route('/publish/<int:user_id>',methods=['POST','GET'])
 @login_required
