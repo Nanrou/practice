@@ -1,3 +1,8 @@
+#coding:utf8
+'''
+定义数据库
+'''
+
 from app import db
 
 ROLE_USER = 0
