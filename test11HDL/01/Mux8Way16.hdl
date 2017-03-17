@@ -1,0 +1,68 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux8Way16.hdl
+
+/**
+ * 8-way 16-bit multiplexor:
+ * out = a if sel == 000
+ *       b if sel == 001
+ *       etc.
+ *       h if sel == 111
+ */
+
+CHIP Mux8Way16 {
+    IN a[16], b[16], c[16], d[16],
+       e[16], f[16], g[16], h[16],
+       sel[3];
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    Not(in=sel[0], out=nosel0);
+    Not(in=sel[1], out=nosel1);
+    Not(in=sel[2], out=nosel2);
+    And(a=nosel0, b=nosel1, out=o0);
+    And(a=o0, b=nosel2, out=s0);
+    And(a=sel[0], b=nosel1, out=o1);
+    And(a=o1, b=nosel2, out=s1);
+    And(a=nosel0, b=sel[1], out=o2);
+    And(a=o2, b=nosel2, out=s2);
+    And(a=sel[0], b=sel[1], out=o3);
+    And(a=o3, b=nosel2, out=s3);
+    
+    And(a=nosel0, b=nosel1, out=o4);
+    And(a=o4, b=sel[2], out=s4);
+    And(a=sel[0], b=nosel1, out=o5);
+    And(a=o5, b=sel[2], out=s5);
+    And(a=nosel0, b=sel[1], out=o6);
+    And(a=o6, b=sel[2], out=s6);
+    And(a=sel[0], b=sel[1], out=o7);
+    And(a=o7, b=sel[2], out=s7);
+    
+    Andoneto16(a=s0, out=s00);
+    Andoneto16(a=s1, out=s11);
+    Andoneto16(a=s2, out=s22);
+    Andoneto16(a=s3, out=s33);
+    Andoneto16(a=s4, out=s44);
+    Andoneto16(a=s5, out=s55);
+    Andoneto16(a=s6, out=s66);
+    Andoneto16(a=s7, out=s77);
+    
+    And16(a[0..15]=a, b[0..15]=s00, out=apart);
+    And16(a[0..15]=b, b[0..15]=s11, out=bpart);
+    And16(a[0..15]=c, b[0..15]=s22, out=cpart);
+    And16(a[0..15]=d, b[0..15]=s33, out=dpart);
+    And16(a[0..15]=e, b[0..15]=s44, out=epart);
+    And16(a[0..15]=f, b[0..15]=s55, out=fpart);
+    And16(a[0..15]=g, b[0..15]=s66, out=gpart);
+    And16(a[0..15]=h, b[0..15]=s77, out=hpart);
+    
+    Or16(a[0..15]=apart, b[0..15]=bpart, out=abpart);
+    Or16(a[0..15]=abpart, b[0..15]=cpart, out=abcpart);
+    Or16(a[0..15]=abcpart, b[0..15]=dpart, out=abcdpart);
+    Or16(a[0..15]=abcdpart, b[0..15]=epart, out=abcdepart);
+    Or16(a[0..15]=abcdepart, b[0..15]=fpart, out=abcdefpart);
+    Or16(a[0..15]=abcdefpart, b[0..15]=gpart, out=abcdefgpart);
+    Or16(a[0..15]=abcdefgpart, b[0..15]=hpart, out=out);
+}

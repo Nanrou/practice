@@ -1,0 +1,67 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux16.hdl
+
+/**
+ * 16-bit multiplexor: 
+ * for i = 0..15 out[i] = a[i] if sel == 0 
+ *                        b[i] if sel == 1
+ */
+
+CHIP Mux16 {
+    IN a[16], b[16], sel;
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    Not(in=sel, out=notsel);
+And(a=a[0], b=notsel, out=apart0);
+And(a=b[0], b=sel, out=bpart0);
+Or(a=apart0, b=bpart0, out=out[0]);
+And(a=a[1], b=notsel, out=apart1);
+And(a=b[1], b=sel, out=bpart1);
+Or(a=apart1, b=bpart1, out=out[1]);
+And(a=a[2], b=notsel, out=apart2);
+And(a=b[2], b=sel, out=bpart2);
+Or(a=apart2, b=bpart2, out=out[2]);
+And(a=a[3], b=notsel, out=apart3);
+And(a=b[3], b=sel, out=bpart3);
+Or(a=apart3, b=bpart3, out=out[3]);
+And(a=a[4], b=notsel, out=apart4);
+And(a=b[4], b=sel, out=bpart4);
+Or(a=apart4, b=bpart4, out=out[4]);
+And(a=a[5], b=notsel, out=apart5);
+And(a=b[5], b=sel, out=bpart5);
+Or(a=apart5, b=bpart5, out=out[5]);
+And(a=a[6], b=notsel, out=apart6);
+And(a=b[6], b=sel, out=bpart6);
+Or(a=apart6, b=bpart6, out=out[6]);
+And(a=a[7], b=notsel, out=apart7);
+And(a=b[7], b=sel, out=bpart7);
+Or(a=apart7, b=bpart7, out=out[7]);
+And(a=a[8], b=notsel, out=apart8);
+And(a=b[8], b=sel, out=bpart8);
+Or(a=apart8, b=bpart8, out=out[8]);
+And(a=a[9], b=notsel, out=apart9);
+And(a=b[9], b=sel, out=bpart9);
+Or(a=apart9, b=bpart9, out=out[9]);
+And(a=a[10], b=notsel, out=apart10);
+And(a=b[10], b=sel, out=bpart10);
+Or(a=apart10, b=bpart10, out=out[10]);
+And(a=a[11], b=notsel, out=apart11);
+And(a=b[11], b=sel, out=bpart11);
+Or(a=apart11, b=bpart11, out=out[11]);
+And(a=a[12], b=notsel, out=apart12);
+And(a=b[12], b=sel, out=bpart12);
+Or(a=apart12, b=bpart12, out=out[12]);
+And(a=a[13], b=notsel, out=apart13);
+And(a=b[13], b=sel, out=bpart13);
+Or(a=apart13, b=bpart13, out=out[13]);
+And(a=a[14], b=notsel, out=apart14);
+And(a=b[14], b=sel, out=bpart14);
+Or(a=apart14, b=bpart14, out=out[14]);
+And(a=a[15], b=notsel, out=apart15);
+And(a=b[15], b=sel, out=bpart15);
+Or(a=apart15, b=bpart15, out=out[15]);
+}
