@@ -43,4 +43,31 @@ CHIP ALU {
 
     PARTS:
    // Put you code here:
+   //整体思路，按顺序，对每个输入进行操作
+   //注意地方，不能直接用out来做输入，要做中间项，要提前在输出的时候划分，不能在输入是划分pin脚
+	Not(in=zx, out=notzx);
+	And16(a[0..15]=x, b[0]=notzx, b[1]=notzx, b[2]=notzx, b[3]=notzx, b[4]=notzx, b[5]=notzx, b[6]=notzx, b[7]=notzx, b[8]=notzx, b[9]=notzx, b[10]=notzx, b[11]=notzx, b[12]=notzx, b[13]=notzx, b[14]=notzx, b[15]=notzx, out=zxout);
+	Not16(in[0..15]=zxout, out=nxout1);
+	Mux16(a[0..15]=zxout, b[0..15]=nxout1, sel=nx, out=nxout);
+	
+	Not(in=zy, out=notzy);
+	And16(a[0..15]=y, b[0]=notzy, b[1]=notzy, b[2]=notzy, b[3]=notzy, b[4]=notzy, b[5]=notzy, b[6]=notzy, b[7]=notzy, b[8]=notzy, b[9]=notzy, b[10]=notzy, b[11]=notzy, b[12]=notzy, b[13]=notzy, b[14]=notzy, b[15]=notzy, out=zyout);
+	Not16(in[0..15]=zyout, out=nyout1);
+	Mux16(a[0..15]=zyout, b[0..15]=nyout1, sel=ny, out=nyout);
+	
+	Add16(a[0..15]=nxout, b[0..15]=nyout, out=xaddy);
+	And16(a[0..15]=nxout, b[0..15]=nyout, out=xandy);
+	Mux16(a[0..15]=xandy, b[0..15]=xaddy, sel=f, out=fout);
+	
+	//no
+	Not16(in[0..15]=fout, out=notfout);
+	Mux16(a[0..15]=fout, b[0..15]=notfout, sel=no, out=out, out[0..7]=tmpout1, out[8..15]=tmpout2, out[15]=tmpout3); 	
+	//zr
+	Or8Way(in=tmpout1, out=or81);
+	Or8Way(in=tmpout2, out=or82);
+	Or(a=or81, b=or82, out=orzr);
+	Not(in=orzr, out=zr);
+	//ng
+	And(a=tmpout3, b=true, out=ng);	
+
 }
