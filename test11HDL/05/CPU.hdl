@@ -40,32 +40,31 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
-	Mux16(a=instruction, b=outALU, sel=instruction[15], out=outmux1);
-	
-	Not(in=instruction[15], out=notA);
-	Or(a=notA, b=instruction[5], out=outor);
-	ARegister(in=outmux1, load=outor, out=outA, out[0..14]=addressM);
-	
-	And(a=instruction[15], b=instruction[4], out=loadD);
-	DRegister(in=outALU, load=loadD, out=outD);
-	
-	Mux16(a=outA, b=inM, sel=instruction[12], out=outAM);
-	
-	ALU(x=outD, y=outAM, zx=instruction[11], nx=instruction[10], zy=instruction[9],
-	ny=instruction[8], f=instruction[7], no=instruction[6],
-	out=outALU, out=outM, zr=zr, ng=ng);
-	
-	And(a=instruction[3], b=instruction[15], out=writeM);
-	
-	Not(in=zr, out=notzr);
-	Not(in=ng, out=notng);
-	And(a=notzr, b=notng, out=ps);
-	And(a=ng, b=instruction[2], out=and1);
-	And(a=zr, b=instruction[1], out=and2);
-	And(a=ps, b=instruction[0], out=and3);
-	Or(a=and1, b=and2, out=or1);
-	Or(a=or1, b=and3, out=or2);
-	
-	And(a=or2, b=instruction[15], out=outAnd3);
-	PC(in=outAM, load=outAnd3, reset=reset, inc=true, out[0..14]=pc);
+    Mux16(a=instruction, b=outALU, sel=instruction[15], out=outmux1);  // 判断是A指令还是C指令，如果是C指令，则使用ALU输出的地址
+    
+    Not(in=instruction[15], out=nota);  // A寄存器是放地址或者数据的，如果输入是A指令，则要将其更新到A寄存器
+    And(a=instruction[15], b=instruction[5], out=cloadA);  // 如果是C指令，则要判断是否要储存到A寄存器
+    Or(a=nota, b=cloadA, out=outor);  // outor作为A寄存器的load位，决定是否更新A寄存器
+    ARegister(in=outmux1, load=outor, out=outA, out[0..14]=addressM);
+    
+    And(a=instruction[15], b=instruction[12], out=cm);  // 如果是C指令，则要确定a位
+    Mux16(a=outA, b=inM, sel=cm, out=outAM);
+    
+    And(a=instruction[15], b=instruction[4], out=cloadD);  // 如果是C指令，且要储存在D寄存器，那就更新D寄存器
+    DRegister(in=outALU, load=cloadD, out=outD);
+    
+    ALU(x=outD, y=outAM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8],
+    f=instruction[7], no=instruction[6], out=outALU, out=outM, zr=zr, ng=ng);
+    
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    Or(a=zr, b=ng, out=zrorng);  // 结合ALU输出的结果去判断J位的跳转
+    Not(in=zrorng, out=dayuling);
+    And(a=instruction[0], b=dayuling, out=j3);
+    And(a=instruction[1], b=zr, out=j2);
+    And(a=instruction[2], b=ng, out=j1);
+    Or8Way(in[0]=j3, in[1]=j2, in[2]=j1, in[3..7]=false, out=jjj);  // 看是否出现跳转
+    And(a=instruction[15], b=jjj, out=pcload);  // 要留意前提是C指令
+    
+    PC(in=outA, load=pcload, reset=reset, inc=true, out[0..14]=pc);
 }
