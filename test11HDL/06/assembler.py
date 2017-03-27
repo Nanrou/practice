@@ -30,28 +30,37 @@ class Assembler:
                        'JGE': '011', 'JLT': '100', 'JNE': '101', 'JLE': '110', 'JMP': '111'}
 
     def before_do_main(self):
+        """
+        第一遍读取，构造ROM的对应表：（行数， 命令）
+        构造RAM的对应表：（标签， 仅跟便签之后的行数）
+        :return: 构造标签的对应表
+        """
         with open(self.filename, 'r') as f:
             lines = f.readlines()
             for line in lines:
                 if line.startswith('\n') or line.startswith('//'):
                     continue
-                self.line = line.strip()
+                self.line = line.split('/')[0].strip()
                 c_type = self.command_type()
                 if c_type.startswith('L'):
-                    # str_part = self.symbol()
-                    # self.rom_table[str_part] = str(self.rom_address)  # ?????
+                    str_part = self.line[1:-1]
+                    self.symbol_table[str_part] = str(self.rom_address)  # 存到表里，按道理是应该存到rom里面，但是现在简单实现，所以就统一存放了
                     continue
                 self.rom_table[str(self.rom_address)] = self.line
                 self.rom_address += 1
 
     def do_main(self):
+        """
+        第二次读取
+        逐行翻译A指令和C指令
+        """
         self.before_do_main()
         with open(self.filename, 'r') as f:
             lines = f.readlines()
             for line in lines:
                 if line.startswith('\n') or line.startswith('//'):
                     continue
-                self.line = line.strip().split('/')[0].strip()
+                self.line = line.split('/')[0].strip()
                 c_type = self.command_type()
                 if c_type.startswith('C'):
                     d = self.dest()
@@ -69,6 +78,9 @@ class Assembler:
                     nf.write(instruction + '\n')
 
     def command_type(self):
+        """
+        判断指令类型
+        """
         if self.line.startswith('@'):
             return 'A_COMMAND'
         if '(' in self.line and ')' in self.line:
@@ -76,10 +88,10 @@ class Assembler:
         return 'C_COMMAND'
 
     def symbol(self):
-        if self.line.startswith('@'):
-            ram_address = self.line[1:]
-        else:
-            ram_address = self.line[1:-1]
+        """
+        读取A指令的内容
+        """
+        ram_address = self.line[1:]
         for i in ram_address:
             if i not in digits:
                 break
@@ -93,11 +105,17 @@ class Assembler:
             return self.symbol_table[ram_address]
 
     def dest(self):
+        """
+        读取dest部分
+        """
         if '=' in self.line:
             d = self.line.split('=')[0]
             return d
 
     def comp(self):
+        """
+        读取comp部分
+        """
         if '=' in self.line:
             c = self.line.split('=')[-1]
             if ';' in c:
@@ -110,10 +128,16 @@ class Assembler:
             return c
 
     def jump(self):
+        """
+        读取jump部分
+        """
         if ';' in self.line:
             return self.line.split(';')[-1]
 
     def turn_to_byte(self, d, c, j):
+        """
+        对传入的参数进行转换为二进制表示
+        """
         _d = d if d is not None else 'Null'
         _c = c if c is not None else '0'
         _j = j if j is not None else 'null'
@@ -131,7 +155,5 @@ class Assembler:
 
 
 if __name__ == '__main__':
-     p = Assembler('Max.asm')
-     p.do_main()
-     # l = '(2)'
-     # print(l[1: -1])
+    p = Assembler('Rect.asm')
+    p.do_main()
