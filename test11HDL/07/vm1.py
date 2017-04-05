@@ -5,9 +5,12 @@ class Vm1:
     def __init__(self, filename):
         self.filename = filename
         self.global_stack = 256
+        self.eq_label = 0
+        self.gt_label = 0
+        self.lt_label = 0
         self.symbol_table = {'SP': '0', 'LCL': '1', 'ARG': '2', 'THIS': '3', 'THAT': '4'}
         self.ram_table = {'0': self.global_stack}
-        self.nfn = filename.split('.')[0] + '.asm'
+        self.nfn = filename.split('.')[0] + '1' + '.asm'
         with open(self.nfn, 'w') as nf:
             nf.write('@{global_stack}\nD=A\n@SP\nM=D\n'.format(global_stack=self.global_stack))
 
@@ -57,14 +60,46 @@ class Vm1:
         if arg1 == 'add':
             cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nM=D+M\n@SP\nM=M+1\n'
         elif arg1 == 'sub':
-            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nM=D-M\n@SP\nM=M+1\n'
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nM=M-D\n@SP\nM=M+1\n'
         elif arg1 == 'neg':
-            cmd = ''
+            cmd = '@SP\nM=M-1\nA=M\nM=-M\n@SP\nM=M+1\n'
+        elif arg1 == 'eq':
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=D-M\n' \
+                  '@{true}\nD;JEQ\n' \
+                  'D=0\n@{back}\n0;JMP\n' \
+                  '({true})\nD=-1\n' \
+                  '({back})\n@SP\nA=M\nM=D\n' \
+                  '@SP\nM=M+1\n'.format(true=self.filename.split('.')[0] + 'eq' + str(self.eq_label),
+                                        back=self.filename.split('.')[0] + 'eq' + str(self.eq_label) + str(self.eq_label))
+            self.eq_label += 1
+        elif arg1 == 'gt':
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n' \
+                  '@{true}\nD;JGT\n' \
+                  'D=0\n@{back}\n0;JMP\n' \
+                  '({true})\nD=-1\n' \
+                  '({back})\n@SP\nA=M\nM=D\n' \
+                  '@SP\nM=M+1\n'.format(true=self.filename.split('.')[0] + 'gt' + str(self.gt_label),
+                                        back=self.filename.split('.')[0] + 'gt' + str(self.gt_label) + str(self.gt_label))
+            self.gt_label += 1
+        elif arg1 == 'lt':
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n' \
+                  '@{true}\nD;JLT\n' \
+                  'D=0\n@{back}\n0;JMP\n' \
+                  '({true})\nD=-1\n' \
+                  '({back})\n@SP\nA=M\nM=D\n' \
+                  '@SP\nM=M+1\n'.format(true=self.filename.split('.')[0] + 'lt' + str(self.lt_label),
+                                        back=self.filename.split('.')[0] + 'lt' + str(self.lt_label) + str(self.lt_label))
+            self.lt_label += 1
+        elif arg1 == 'and':
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nM=D&M\n@SP\nM=M+1\n'
+        elif arg1 == 'or':
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nM=D|M\n@SP\nM=M+1\n'
+        elif arg1 == 'not':
+            cmd = '@SP\nM=M-1\nA=M\nM=!M\n@SP\nM=M+1\n'
         else:
             cmd = ''
         return cmd
 
 if __name__ == '__main__':
-    p = Vm1('SimpleAdd.vm')
+    p = Vm1('StackTest.vm')
     p.advance()
-    print(p.ram_table)
