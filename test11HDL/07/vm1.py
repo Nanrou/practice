@@ -4,13 +4,18 @@
 class Vm1:
     def __init__(self, filename):
         self.filename = filename
+        self.temp = 5
         self.global_stack = 256
+        self.local = 300
+        self.arg = 400
+        self.this = 3000
+        self.that = 3010
         self.eq_label = 0
         self.gt_label = 0
         self.lt_label = 0
         self.symbol_table = {'SP': '0', 'LCL': '1', 'ARG': '2', 'THIS': '3', 'THAT': '4'}
         self.ram_table = {'0': self.global_stack}
-        self.nfn = filename.split('.')[0] + '1' + '.asm'
+        self.nfn = filename.split('.')[0] + '.asm'
         with open(self.nfn, 'w') as nf:
             nf.write('@{global_stack}\nD=A\n@SP\nM=D\n'.format(global_stack=self.global_stack))
 
@@ -45,12 +50,36 @@ class Vm1:
         return 'UNKNOWN'
 
     def write_push_pop(self, line):
-        arg1, arg2 = line.split(' ')[1:]
-        if arg1 == 'constant':
-            self.ram_table[self.symbol_table['SP']] = self.global_stack
-            self.ram_table[str(self.global_stack)] = arg2
-            self.global_stack += 1
-            cmd = '@{arg2}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(arg2=arg2)
+        pp, arg1, arg2 = line.split(' ')
+        if pp == 'push':
+            cmd = 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            if arg1 == 'constant':
+                self.ram_table[self.symbol_table['SP']] = self.global_stack
+                self.ram_table[str(self.global_stack)] = arg2
+                self.global_stack += 1
+                cmd = '@{arg2}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(arg2=arg2)
+            elif arg1 == 'local':
+                cmd = '@{local}\n'.format(local=self.local + int(arg2)) + cmd
+            elif arg1 == 'argument':
+                cmd = '@{arg}\n'.format(arg=self.arg + int(arg2)) + cmd
+            elif arg1 == 'this':
+                cmd = '@{_this}\n'.format(_this=self.this + int(arg2)) + cmd
+            elif arg1 == 'that':
+                cmd = '@{that}\n'.format(that=self.that + int(arg2)) + cmd
+            elif arg1 == 'temp':
+                cmd = '@{temp}\n'.format(temp=self.temp + int(arg2)) + cmd
+        elif pp == 'pop':
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n'
+            if arg1 == 'local':
+                cmd += '@{local}\nM=D\n'.format(local=self.local + int(arg2))
+            elif arg1 == 'argument':
+                cmd += '@{arg}\nM=D\n'.format(arg=self.arg + int(arg2))
+            elif arg1 == 'this':
+                cmd += '@{_this}\nM=D\n'.format(_this=self.this + int(arg2))
+            elif arg1 == 'that':
+                cmd += '@{that}\nM=D\n'.format(that=self.that + int(arg2))
+            elif arg1 == 'temp':
+                cmd += '@{temp}\nM=D\n'.format(temp=self.temp + int(arg2))
         else:
             cmd = 'None\n'
         return cmd
@@ -101,5 +130,5 @@ class Vm1:
         return cmd
 
 if __name__ == '__main__':
-    p = Vm1('StackTest.vm')
+    p = Vm1('BasicTest.vm')
     p.advance()
