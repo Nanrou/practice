@@ -2,14 +2,17 @@
 
 
 class Vm1:
-    def __init__(self, filename):
+    def __init__(self, filename, static_num):
         self.filename = filename
+        self.static_num = static_num
         self.temp = 5
         self.global_stack = 256
+        self.pointer = 3
+        self.temp = 5
         self.local = 300
         self.arg = 400
-        self.this = 3000
-        self.that = 3010
+        self.this = 3030
+        self.that = 3040
         self.eq_label = 0
         self.gt_label = 0
         self.lt_label = 0
@@ -54,9 +57,9 @@ class Vm1:
         if pp == 'push':
             cmd = 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             if arg1 == 'constant':
-                self.ram_table[self.symbol_table['SP']] = self.global_stack
-                self.ram_table[str(self.global_stack)] = arg2
-                self.global_stack += 1
+                # self.ram_table[self.symbol_table['SP']] = self.global_stack
+                # self.ram_table[str(self.global_stack)] = arg2
+                # self.global_stack += 1
                 cmd = '@{arg2}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(arg2=arg2)
             elif arg1 == 'local':
                 cmd = '@{local}\n'.format(local=self.local + int(arg2)) + cmd
@@ -68,6 +71,10 @@ class Vm1:
                 cmd = '@{that}\n'.format(that=self.that + int(arg2)) + cmd
             elif arg1 == 'temp':
                 cmd = '@{temp}\n'.format(temp=self.temp + int(arg2)) + cmd
+            elif arg1 == 'pointer':
+                cmd = '@{pointer}\n'.format(pointer=self.pointer + int(arg2)) + cmd
+            elif arg1 == 'static':
+                cmd = '@{static}\n'.format(static=self.static_num + int(arg2)) + cmd
         elif pp == 'pop':
             cmd = '@SP\nM=M-1\nA=M\nD=M\n'
             if arg1 == 'local':
@@ -80,6 +87,10 @@ class Vm1:
                 cmd += '@{that}\nM=D\n'.format(that=self.that + int(arg2))
             elif arg1 == 'temp':
                 cmd += '@{temp}\nM=D\n'.format(temp=self.temp + int(arg2))
+            elif arg1 == 'pointer':
+                cmd += '@{pointer}\nM=D\n'.format(pointer=self.pointer + int(arg2))
+            elif arg1 == 'static':
+                cmd += '@{static}\nM=D\n'.format(static=self.static_num + int(arg2))
         else:
             cmd = 'None\n'
         return cmd
@@ -130,5 +141,8 @@ class Vm1:
         return cmd
 
 if __name__ == '__main__':
-    p = Vm1('BasicTest.vm')
-    p.advance()
+    namelist = ['PointerTest.vm', 'StaticTest.vm']
+    static_num = 16
+    for i in namelist:
+        p = Vm1(i, static_num)
+        p.advance()
