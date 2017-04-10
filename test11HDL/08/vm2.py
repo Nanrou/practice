@@ -11,8 +11,8 @@ class Vm2:
         self.temp = 5
         self.local = 300
         self.arg = 400
-        self.this = 3030
-        self.that = 3040
+        self.this = 'THIS'
+        self.that = 'THAT'
         self.eq_label = 0
         self.gt_label = 0
         self.lt_label = 0
@@ -66,22 +66,25 @@ class Vm2:
         if pp == 'push':
             cmd = 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             if arg1 == 'constant':
-                # self.ram_table[self.symbol_table['SP']] = self.global_stack
-                # self.ram_table[str(self.global_stack)] = arg2
-                # self.global_stack += 1
                 cmd = '@{arg2}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(arg2=arg2)
             elif arg1 == 'local':
                 cmd = '@{local}\n'.format(local=self.local + int(arg2)) + cmd
             elif arg1 == 'argument':
                 cmd = '@{arg}\n'.format(arg=self.arg + int(arg2)) + cmd
             elif arg1 == 'this':
-                cmd = '@{_this}\n'.format(_this=self.this + int(arg2)) + cmd
+                _cmd = '@{_this}\nA=M\n'.format(_this=self.this)
+                for _ in range(int(arg2)):
+                    _cmd += 'A=A+1\n'
+                cmd = _cmd + cmd
             elif arg1 == 'that':
-                cmd = '@{that}\n'.format(that=self.that + int(arg2)) + cmd
+                _cmd = '@{that}\nA=M\n'.format(that=self.that)
+                for _ in range(int(arg2)):
+                    _cmd += 'A=A+1\n'
+                cmd = _cmd + cmd
             elif arg1 == 'temp':
                 cmd = '@{temp}\n'.format(temp=self.temp + int(arg2)) + cmd
             elif arg1 == 'pointer':
-                cmd = '@{pointer}\nA=M\n'.format(pointer=self.pointer + int(arg2)) + cmd
+                cmd = '@{pointer}\n'.format(pointer=self.pointer + int(arg2)) + cmd
             elif arg1 == 'static':
                 cmd = '@{static}\n'.format(static=self.static_num + int(arg2)) + cmd
         elif pp == 'pop':
@@ -91,19 +94,25 @@ class Vm2:
             elif arg1 == 'argument':
                 cmd += '@{arg}\nM=D\n'.format(arg=self.arg + int(arg2))
             elif arg1 == 'this':
-                cmd += '@{_this}\nM=D\n'.format(_this=self.this + int(arg2))
+                _cmd = '@{_this}\nA=M\n'.format(_this=self.this)
+                for _ in range(int(arg2)):
+                    _cmd += 'A=A+1\n'
+                cmd += _cmd + 'M=D\n'
             elif arg1 == 'that':
-                cmd += '@{that}\nM=D\n'.format(that=self.that + int(arg2))
+                _cmd = '@{that}\nA=M\n'.format(that=self.that)
+                for _ in range(int(arg2)):
+                    _cmd += 'A=A+1\n'
+                cmd += _cmd + 'M=D\n'
             elif arg1 == 'temp':
                 cmd += '@{temp}\nM=D\n'.format(temp=self.temp + int(arg2))
             elif arg1 == 'pointer':
-                cmd += '@{pointer}\nA=M\nM=D\n'.format(pointer=self.pointer + int(arg2))
+                cmd += '@{pointer}\nM=D\n'.format(pointer=self.pointer + int(arg2))
             elif arg1 == 'static':
                 cmd += '@{static}\nM=D\n'.format(static=self.static_num + int(arg2))
         elif pp == 'label':
             cmd = '({label})\n'.format(label=arg1)
         elif pp == 'if-goto':
-            cmd = '@SP\nM=M-1\nA=M\nD=M\n@{label}\nD;JGT\n'.format(label=arg1)
+            cmd = '@SP\nM=M-1\nA=M\nD=M\n@{label}\nD;JNE\n'.format(label=arg1)
         elif pp == 'goto':
             cmd = '@{label}\n0;JMP\n'.format(label=arg1)
         else:
