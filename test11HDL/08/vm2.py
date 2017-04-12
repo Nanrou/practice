@@ -6,7 +6,7 @@ class Vm2:
         self.filename = filename
         self.static_num = static_num
         self.temp = 5
-        self.global_stack = 256
+        # self.global_stack = 256
         self.pointer = 3
         self.temp = 5
         self.local = 'LCL'
@@ -15,22 +15,26 @@ class Vm2:
         self.that = 'THAT'
         self.FRAME = 13
         self.RET = 14
+        self.re_address = 0
         self.eq_label = 0
         self.gt_label = 0
         self.lt_label = 0
         self.symbol_table = {'SP': '0', 'LCL': '1', 'ARG': '2', 'THIS': '3', 'THAT': '4'}
-        self.ram_table = {'0': self.global_stack}
+        # self.ram_table = {'0': self.global_stack}
         self.nfn = filename.split('.')[0] + '.asm'
         with open(self.nfn, 'w') as nf:
-            nf.write('@{global_stack}\nD=A\n@SP\nM=D\n'.format(global_stack=self.global_stack))
-        init_ins = 'call Sys.init'
-        self.trans_to_ins(init_ins)
+            nf.write('')
+        #     nf.write('@{global_stack}\nD=A\n@SP\nM=D\n'.format(global_stack=self.global_stack))
+        # dont need init @sp
+        # init_ins = 'call Sys.init'
+        # self.trans_to_ins(init_ins)
 
     def advance(self):
         with open(self.filename, 'r') as f:
             lines = f.readlines()
             for line in lines:
-                self.trans_to_ins(line)
+                if line:
+                    self.trans_to_ins(line)
 
     def trans_to_ins(self, line):
         if line.startswith('//'):
@@ -158,7 +162,7 @@ class Vm2:
             cmd += '@13\nD=M\n@4\nD=D-A\nA=D\nD=M\n@LCL\nM=D\n'  # LCL = *(FRAME-4)
             cmd += '@14\nA=M\n0;JMP\n'  # go to RET
         elif pp == 'call':
-            cmd = '@return_address\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'  # push return address
+            cmd = '@return_address' + str(self.re_address) + '\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'  # push return address
             cmd += '@LCL\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'  # push LCL
             cmd += '@ARG\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'  # push ARG
             cmd += '@THIS\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'  # push THIS
@@ -166,7 +170,8 @@ class Vm2:
             cmd += '@{n}\nD=A\n@5\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D\n'.format(n=arg2)  # ARG = SP-n-5
             cmd += '@SP\nD=M\n@LCL\nM=D\n'  # LCL = SP
             cmd += '@{f}\n0;JMP\n'.format(f=arg1)  # go to f
-            cmd += '(return_address)\n'  # (return address)
+            cmd += '(return_address' + str(self.re_address) + ')\n'  # (return address)
+            self.re_address += 1
         else:
             cmd = 'None\n'
         return cmd
@@ -219,5 +224,5 @@ class Vm2:
 if __name__ == '__main__':
     # namelist = ['PointerTest.vm', 'StaticTest.vm']
     # static_num = 16
-    p = Vm2('Sys.vm')
+    p = Vm2('NestedCall.vm')
     p.advance()
