@@ -24,7 +24,7 @@ class Vm2:
         self.nfn = filename.split('.')[0] + '.asm'
         with open(self.nfn, 'w') as nf:
             nf.write('')
-        #     nf.write('@{global_stack}\nD=A\n@SP\nM=D\n'.format(global_stack=self.global_stack))
+            # nf.write('@{global_stack}\nD=A\n@SP\nM=D\n'.format(global_stack=261))
         # dont need init @sp
         # init_ins = 'call Sys.init'
         # self.trans_to_ins(init_ins)
@@ -221,8 +221,28 @@ class Vm2:
             cmd = ''
         return cmd
 
+
+import os
+
+
+def combine(filename_list, newname):
+    nfn = 'nf.asm'
+    for n in filename_list:
+        with open(n, 'r') as f:
+            doc = f.read()
+            with open(nfn, 'a') as nfile:
+                nfile.write(doc)
+    for i in filename_list:
+        os.remove(i)
+    os.rename(nfn, newname)
+
+
 if __name__ == '__main__':
-    # namelist = ['PointerTest.vm', 'StaticTest.vm']
+
+    namelist = ['Sys.vm',]
+    # nfnlist = ['Sys.asm', 'Main.asm']
     # static_num = 16
-    p = Vm2('NestedCall.vm')
-    p.advance()
+    for n in namelist:
+        p = Vm2(n)
+        p.advance()
+    # combine(nfnlist, newname='FibonacciElement.asm')
